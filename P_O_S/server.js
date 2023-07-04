@@ -2,23 +2,22 @@ const express = require('express');
 const ejs = require('ejs');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const shipmentRoutes = require('./models/shipment_routes');
 const User = require('./models/user_model');
-
+const cors = require('cors');
 
 const app = express();
+
 app.use(express.json());
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 // Connect to MongoDB
-//const url = "mongodb://localhost:27017/People"
-//mongoose.connect(url, {})
- //.then(result => console.log("database connected"))
- //.catch(err => console.log(err))
-
-mongoose.connect('mongodb://localhost:27017/shipment_management', {
+mongoose
+  .connect('mongodb://localhost:27017/shipment_management', {
     useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+    useUnifiedTopology: true,
+  })
   .then(() => {
     console.log('Connected to MongoDB');
   })
@@ -26,12 +25,16 @@ mongoose.connect('mongodb://localhost:27017/shipment_management', {
     console.error('Failed to connect to MongoDB:', error);
   });
 
-// Routes
-app.use('/shipments', shipmentRoutes);
+// Simulated user data
+const users = [
+  { id: 1, username: 'admin', password: 'admin', role: 'admin' },
+  { id: 2, username: 'user', password: 'user', role: 'user' },
+  { id: 3, username: 'employer', password: 'employer', role: 'employer' },
+];
 
 app.set('view engine', 'ejs');
 app.use(express.static('styles')); // Serve static files from the 'styles' directory
-app.use(bodyParser.urlencoded({extended: true }));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/signup', (req, res) => {
   res.render('signup');
@@ -40,99 +43,68 @@ app.get('/signup', (req, res) => {
 app.post('/signup', (req, res) => {
   const { username, password, email } = req.body;
 
-  //create a new user
+  // create a new user
   const user = new User({
     username,
     password,
   });
 
-//save the user to database
-user.save()
-  .then(() => {
-    res.render('signup-success', { username });
-  })
-  .catch((error) => {
-    res.render('signup', { error: 'Failed to create user' });
-  });
+  // save the user to the database
+  user
+    .save()
+    .then(() => {
+      res.render('signup-success', { email });
+    })
+    .catch((error) => {
+      res.render('signup', { error: 'Failed to create user' });
+    });
 });
 
-app.get('/dashboard', (req, res) => {
-  // Prepare data for components
-  const overviewData = {/* ... */};
-  const statisticsData = {
-    title: 'Statistics',
-    items: [
-      { name: 'Vehicles', value: 'Logistics' },
-      { name: 'Fuel', value: 'Price' },
-      // Add more items as needed
-    ]
-  };
-  const reportsData = {fuel: {
-    1: 50,
-    2: 60,
-    3: 70,
-    4: 15,
-    5: 25,
-    6: 23
-  },
-  repairs: {
-    1: 3,
-    2: 5,
-    3: 8,
-    4: 4,
-    5: 6,
-    6: 0
-  },
-  trips: {
-    1: 10,
-    2: 15,
-    3: 13,
-    4: 16,
-    5: 12,
-    6: 19
-  },
-  revenue: {
-    1: 1000,
-    2: 1500,
-    3: 1300,
-    4: 1600,
-    5: 1200,
-    6: 1900
+// Middleware to check if user is authenticated
+const authenticateUser = (req, res, next) => {
+  const { username, password } = req.body;
+
+  // Find the user with matching credentials
+  const user = users.find((u) => u.username === username && u.password === password);
+
+  if (user) {
+    req.user = user;
+    next();
+  } else {
+    res.status(401).json({ success: false, message: 'Invalid username or password' });
   }
 };
 
-  res.render('dashboard', {
-    overview: overviewData,
-    statistics: statisticsData,
-    reports: reportsData
-    
-  });
+// Dashboard route with role-based routing
+app.get('/dashboard', authenticateUser, (req, res) => {
+  const { role } = req.user;
+
+  if (role === 'admin') {
+    // Render admin dashboard
+    res.render('admin-dashboard');
+  } else if (role === 'user') {
+    // Render user dashboard
+    res.render('user-dashboard');
+  } else if (role === 'employer') {
+    // Render employer dashboard
+    res.render('employer-dashboard');
+  } else {
+    res.status(403).json({ success: false, message: 'Access denied' });
+  }
 });
 
 app.get('/login', (req, res) => {
   res.render('login');
 });
 
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-
-  //Find user in the database
-  User.findOne({ username })
-    .then((user) => {
-      if (user && user.password === password) {
-        res.redirect('/dashboard');
-      } else {
-        res.render('login', { error: 'Invalid username or password' });
-      }
-    })
-    .catch((error) => {
-      res.render('login', { error: 'Failed to authenticate user' });
-    });
-  });
+app.post('/login', authenticateUser, (req, res) => {
+  const { role } = req.user;
+  res.json({ success: true, role });
+});
 
 app.get('/', (req, res) => {
   const data = {
-    title: 'ERP Africa'
+    title: 'ERP Africa',
   };
   res.render('index', data);
 });
