@@ -99,7 +99,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', authenticateUser, (req, res) => {
   const { role } = req.user;
-  
+
   if (role === 'admin') {
     // Redirect to admin dashboard
     res.redirect('/dashboard/admin');
@@ -119,6 +119,49 @@ app.get('/', (req, res) => {
     title: 'ERP Africa',
   };
   res.render('index', data);
+});
+
+// GET route to retrieve order tracking information
+app.get('/orders/:orderId/track', (req, res) => {
+  const { orderId } = req.params;
+
+  // Fetch order from the database based on orderId
+  Order.findById(orderId)
+    .then((order) => {
+      if (order) {
+        // Send order tracking information as response
+        res.status(200).json({ success: true, trackingInfo: order.trackingInfo });
+      } else {
+        res.status(404).json({ success: false, message: 'Order not found' });
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({ success: false, message: 'Error retrieving order tracking information' });
+    });
+});
+
+// POST route to update order tracking information
+app.post('/orders/:orderId/track', (req, res) => {
+  const { orderId } = req.params;
+  const { status, location } = req.body;
+
+  // Update order tracking information in the database
+  Order.findByIdAndUpdate(
+    orderId,
+    { $set: { status, location } },
+    { new: true }
+  )
+    .then((order) => {
+      if (order) {
+        // Send updated order tracking information as response
+        res.status(200).json({ success: true, trackingInfo: order.trackingInfo });
+      } else {
+        res.status(404).json({ success: false, message: 'Order not found' });
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({ success: false, message: 'Error updating order tracking information' });
+    });
 });
 
 app.listen(4013, () => {
