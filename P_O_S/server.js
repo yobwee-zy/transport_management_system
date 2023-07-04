@@ -99,7 +99,19 @@ app.get('/login', (req, res) => {
 
 app.post('/login', authenticateUser, (req, res) => {
   const { role } = req.user;
-  res.json({ success: true, role });
+  
+  if (role === 'admin') {
+    // Redirect to admin dashboard
+    res.redirect('/dashboard/admin');
+  } else if (role === 'user') {
+    // Redirect to user dashboard
+    res.redirect('/dashboard/user');
+  } else if (role === 'employer') {
+    // Redirect to employer dashboard
+    res.redirect('/dashboard/employer');
+  } else {
+    res.status(403).json({ success: false, message: 'Access denied' });
+  }
 });
 
 app.get('/', (req, res) => {
