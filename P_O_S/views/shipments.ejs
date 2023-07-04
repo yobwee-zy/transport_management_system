@@ -1,0 +1,117 @@
+<!-- shipments.ejs -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Shipment Management</title>
+  <style>
+    /* styles/shipment.css */
+
+body {
+  background-image: url('https://th.bing.com/th/id/R.3b1165069880da896784606e3d8d1166?rik=pwpXRTmDxuWYww&riu=http%3a%2f%2fmfame.guru%2fwp-content%2fuploads%2f2020%2f10%2fShippingandLogistics.jpg&ehk=DFy6YVhCKccboNYzoRe0xwWyoP3f4RozQkPZfc7kH7s%3d&risl=&pid=ImgRaw&r=0');
+
+body {
+  background-image: url('https://th.bing.com/th/id/R.3b1165069880da896784606e3d8d1166?rik=pwpXRTmDxuWYww&riu=http%3a%2f%2fmfame.guru%2fwp-content%2fuploads%2f2020%2f10%2fShippingandLogistics.jpg&ehk=DFy6YVhCKccboNYzoRe0xwWyoP3f4RozQkPZfc7kH7s%3d&risl=&pid=ImgRaw&r=0');
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  color: navy;
+  text-align: center;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tr:hover {
+  background-color: #f5f5f5;
+}
+
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  color: navy;
+  text-align: center;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+th, td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tr:hover {
+  background-color: #f5f5f5;
+}
+
+  </style>
+</head>
+<body>
+  <h1>Shipment Management</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>Shipment ID</th>
+        <th>Carrier</th>
+        <th>Pickup</th>
+        <th>Delivery</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% shipments.forEach((shipment) => { %>
+        <tr>
+          <td><%= shipment.id %></td>
+          <td><%= shipment.carrier %></td>
+          <td><%= shipment.pickup %></td>
+          <td><%= shipment.delivery %></td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</body>
+</html>

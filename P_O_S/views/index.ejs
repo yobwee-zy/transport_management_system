@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ERP Africa</title>
+  <style>
+    /* CSS styles go here */
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('https://wallpaperaccess.com/full/1621272.jpg');
+      background-repeat: no-repeat;
+      background-size: cover;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .button-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .landing-page {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #140a0a;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      animation: floatAnimation 3s ease-in-out infinite;
+    }
+
+    .dashboard-button, .auth-button {
+      display: block;
+      width: 200px;
+      height: 60px;
+      margin: 0;
+      background-color: #337ab7;
+      color: #eec614;
+      text-align: center;
+      line-height: 60px;
+      font-size: 18px;
+      border-radius: 30px;
+      text-decoration: none;
+    }
+
+    .auth-buttons {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .auth-button {
+      width: 200px;
+      height: 60px;
+      margin: 0;
+      background-color: #337ab7;
+      color: #eec614;
+      text-align: center;
+      line-height: 60px;
+      font-size: 18px;
+      border-radius: 30px;
+      text-decoration: none;
+    }
+
+    @keyframes floatAnimation {
+      0% {
+        transform: translate(-50%, -50%);
+      }
+      50% {
+        transform: translate(-50%, -45%);
+      }
+      100% {
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">
+    <img src="https://wallpaperaccess.com/full/1621272.jpg" width="100">
+  </div>
+  <h1 style="color: yellow; background-color: grey;">Welcome to <%= title %></h1>
+  <div class="button-container">
+    <a href="/dashboard" class="dashboard-button">Dashboard</a>
+    <a href="/signup" class="dashboard-button">Sign Up</a>
+    <a href="/login" class="dashboard-button">Log In</a>
+  </div>
+  <script src="index.js"></script>
+</body>
+</html>

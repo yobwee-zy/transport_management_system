@@ -1,0 +1,243 @@
+<!-- dashboard.ejs -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <style>
+    /* styles.css */
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('https://th.bing.com/th/id/R.fd4d9840ec70962b96e0519189b56f6f?rik=w3iIRqjS3zndzg&pid=ImgRaw&r=0');
+      background-color: transparent;
+      background-repeat: no-repeat;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+    }
+
+    .dashboard-button {
+  background-color: navy;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  transition: background-color 0.3s;
+}
+
+.dashboard-button:hover {
+  background-color: #000080;
+  cursor: pointer;
+}
+
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    tr:hover {
+      background-color: #f5f5f5;
+    }
+
+    .left-side {
+      display: flex;
+      flex-direction: column;
+      background-color: navy;
+      color: #fff;
+      padding: 20px;
+      width: 30%;
+    }
+
+    .menu-text {
+      color: yellow;
+      cursor: pointer;
+    }
+
+    .menu-components {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .menu-components li {
+      margin-bottom: 10px;
+    }
+
+    .right-side {
+      background-color: #f1f1f1;
+      padding: 20px;
+      width: 70%;
+    }
+
+    header {
+      background-color: #333;
+      color: #fff;
+      padding: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      color: #ece113f6;
+    }
+
+    main {
+      padding: 20px;
+    }
+
+    section {
+      margin-bottom: 30px;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    .component {
+      background-color: transparent;
+      border-radius: 4px;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    footer {
+      background-color: #333;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #chart {
+      max-width: 50%;
+      height: 150px;
+    }
+  </style>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <header>
+    <h1>Welcome to the Dashboard</h1>
+  </header>
+
+  <main>
+    <section class="left-side">
+      <h2 class="menu-text" onclick="toggleMenu()">Menu</h2>
+      <ul class="menu-components">
+        <li><button type="button" onclick="location.href='/emails'">Emails</button></li>
+        <li><button type="button" onclick="location.href='/people'">People</button></li>
+        <li><button type="button" onclick="location.href='/events'">Events</button></li>
+        <li><button type="button" onclick="location.href='/branches'">Branches</button></li>
+        <li><button type="button" onclick="location.href='/profile'">User Profile</button></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Statistics</h2>
+      <div class="component">
+        <canvas id="chart"></canvas>
+      </div>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          // Data for the pie chart (replace with your own data)
+          var data = {
+            labels: ['Revenue', 'Fuel', 'Repair', 'maintenance', 'General expenses', 'salary'],
+            datasets: [{
+              data: [10, 20, 30, 10, 15, 6],
+              backgroundColor: Chart.helpers.color('#FF6384').alpha(0.7).rgbString(),
+              borderColor: '#FFF',
+              borderWidth: 2
+            }]
+          };
+          
+          // Generate distinctive colors for each item
+          var colors = Chart.helpers.color('#36A2EB').alpha(0.7).rgbString().split(',');
+          data.datasets[0].backgroundColor = data.labels.map(function(_, index) {
+            return Chart.helpers.color([colors[0], colors[1], colors[2] + (index / data.labels.length)].join(',')).alpha(0.7).rgbString();
+          });
+    
+          // Options for the pie chart
+          var options = {
+            responsive: true
+          };
+    
+          // Get the canvas element
+          var ctx = document.getElementById('chart').getContext('2d');
+    
+          // Create the pie chart
+          new Chart(ctx, {
+            type: 'pie',
+            data: data,
+            options: options
+          });
+        });
+    
+        function toggleMenu() {
+          var menuComponents = document.querySelector('.menu-components');
+          menuComponents.style.display = (menuComponents.style.display === 'none') ? 'block' : 'none';
+        }
+      </script>
+    </section>
+    
+
+    <section>
+      <h2>Reports</h2>
+      <div class="component">
+        <table>
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Fuel</th>
+              <th>Repairs</th>
+              <th>Trips</th>
+              <th>Revenue</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for (let i = 1; i <= 6; i++) { %>
+              <tr>
+                <td>Vehicle <%= i %></td>
+                <td><%= reports.fuel[i] %></td>
+                <td><%= reports.repairs[i] %></td>
+                <td><%= reports.trips[i] %></td>
+                <td><%= reports.revenue[i] %></td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Shipments</h2>
+      <div class="component">
+         <a href="/shipments" class="dashboard-button">Shipments</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2023 ERP Africa</p>
+  </footer>
+</body>
+</html>
