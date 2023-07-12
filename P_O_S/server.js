@@ -2,7 +2,11 @@ const express = require('express');
 const ejs = require('ejs');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const User = require('./models/user_model');
+const session = require('express-session');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const passportLocalMongoose = require('passport-local-mongoose');
+const user_model = require('./models/user_model');
 const cors = require('cors');
 
 const app = express();
@@ -11,13 +15,21 @@ app.use(express.json());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(session({
+  secret: "keeping you logged in",
+  resave: false,
+  saveUninitialized: false
+}));
+
+// Passport middleware setup
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Connect to MongoDB
-mongoose
-  .connect('mongodb://localhost:27017/shipment_management', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+mongoose.connect('mongodb://localhost:27017/shipment_management', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
   .then(() => {
     console.log('Connected to MongoDB');
   })
@@ -25,93 +37,63 @@ mongoose
     console.error('Failed to connect to MongoDB:', error);
   });
 
-// Simulated user data
-const users = [
-  { id: 1, username: 'admin', password: 'admin', role: 'admin' },
-  { id: 2, username: 'user', password: 'user', role: 'user' },
-  { id: 3, username: 'employer', password: 'employer', role: 'employer' },
-];
+const userSchema = new mongoose.Schema({
+  username: String,
+  password: String
+});
+
+// Apply passport-local-mongoose plugin to userSchema
+userSchema.plugin(passportLocalMongoose);
+
+// Define the User model
+const User = mongoose.model('User', userSchema);
+
+// Configure Passport to use the local strategy
+passport.use(new LocalStrategy(User.authenticate()));
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+// Set up route handlers
 
 app.set('view engine', 'ejs');
-app.use(express.static('styles')); // Serve static files from the 'styles' directory
+app.use(express.static('styles'));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/signup', (req, res) => {
   res.render('signup');
 });
 
-app.post('/signup', (req, res) => {
-  const { username, password, email } = req.body;
+app.post('/signup', passport.authenticate('local', {
+  successRedirect: '/dashboard',
+  failureRedirect: '/signup',
+}));
 
-  // create a new user
-  const user = new User({
-    username,
-    password,
-  });
+app.post('/login', passport.authenticate('local', {
+  successRedirect: '/dashboard',
+  failureRedirect: '/login',
+}));
 
-  // save the user to the database
-  user
-    .save()
-    .then(() => {
-      res.render('signup-success', { email });
-    })
-    .catch((error) => {
-      res.render('signup', { error: 'Failed to create user' });
-    });
-});
+app.get('/dashboard', (req, res) => {
+  if (req.isAuthenticated()) {
+    const { role } = req.user;
 
-// Middleware to check if user is authenticated
-const authenticateUser = (req, res, next) => {
-  const { username, password } = req.body;
-
-  // Find the user with matching credentials
-  const user = users.find((u) => u.username === username && u.password === password);
-
-  if (user) {
-    req.user = user;
-    next();
+    if (role === 'admin') {
+      res.render('admin-dashboard');
+    } else if (role === 'user') {
+      res.render('user-dashboard');
+    } else if (role === 'client') {
+      res.render('client-dashboard');
+    } else {
+      res.status(403).json({ success: false, message: 'Access denied' });
+    }
   } else {
-    res.status(401).json({ success: false, message: 'Invalid username or password' });
-  }
-};
-
-// Dashboard route with role-based routing
-app.get('/dashboard', authenticateUser, (req, res) => {
-  const { role } = req.user;
-
-  if (role === 'admin') {
-    // Render admin dashboard
-    res.render('admin-dashboard');
-  } else if (role === 'user') {
-    // Render user dashboard
-    res.render('user-dashboard');
-  } else if (role === 'employer') {
-    // Render employer dashboard
-    res.render('employer-dashboard');
-  } else {
-    res.status(403).json({ success: false, message: 'Access denied' });
+    res.redirect('/login');
   }
 });
 
 app.get('/login', (req, res) => {
   res.render('login');
-});
-
-app.post('/login', authenticateUser, (req, res) => {
-  const { role } = req.user;
-
-  if (role === 'admin') {
-    // Redirect to admin dashboard
-    res.redirect('/dashboard/admin');
-  } else if (role === 'user') {
-    // Redirect to user dashboard
-    res.redirect('/dashboard/user');
-  } else if (role === 'employer') {
-    // Redirect to employer dashboard
-    res.redirect('/dashboard/employer');
-  } else {
-    res.status(403).json({ success: false, message: 'Access denied' });
-  }
 });
 
 app.get('/', (req, res) => {
@@ -121,15 +103,23 @@ app.get('/', (req, res) => {
   res.render('index', data);
 });
 
-// GET route to retrieve order tracking information
+// Define the order model
+const orderSchema = new mongoose.Schema({
+  orderId: String,
+  trackingInfo: {
+    status: String,
+    location: String
+  }
+});
+
+const Order = mongoose.model("Order", orderSchema);
+
 app.get('/orders/:orderId/track', (req, res) => {
   const { orderId } = req.params;
 
-  // Fetch order from the database based on orderId
   Order.findById(orderId)
     .then((order) => {
       if (order) {
-        // Send order tracking information as response
         res.status(200).json({ success: true, trackingInfo: order.trackingInfo });
       } else {
         res.status(404).json({ success: false, message: 'Order not found' });
@@ -140,20 +130,17 @@ app.get('/orders/:orderId/track', (req, res) => {
     });
 });
 
-// POST route to update order tracking information
 app.post('/orders/:orderId/track', (req, res) => {
   const { orderId } = req.params;
   const { status, location } = req.body;
 
-  // Update order tracking information in the database
   Order.findByIdAndUpdate(
     orderId,
-    { $set: { status, location } },
+    { $set: { 'trackingInfo.status': status, 'trackingInfo.location': location } },
     { new: true }
   )
     .then((order) => {
       if (order) {
-        // Send updated order tracking information as response
         res.status(200).json({ success: true, trackingInfo: order.trackingInfo });
       } else {
         res.status(404).json({ success: false, message: 'Order not found' });
