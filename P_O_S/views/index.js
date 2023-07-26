@@ -3,15 +3,40 @@ document.addEventListener('DOMContentLoaded', () => {
     const logInButton = document.getElementById('log-in-button');
   
     signInButton.addEventListener('click', () => {
-      // Handle sign-in button click event
-      // Add your sign-in logic here
-      console.log('Sign In clicked');
-    });
-  
-    logInButton.addEventListener('click', () => {
-      // Handle log-in button click event
-      // Add your log-in logic here
-      console.log('Log In clicked');
+     // Send a POST request to the server for sign-in
+     fetch('/signup', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ /* add any relevant sign-in data here */ })
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Handle the response from the server, e.g., display a message, redirect, etc.
+      console.log(data);
+    })
+    .catch(error => {
+      console.error('Error during sign-in:', error);
     });
   });
+    logInButton.addEventListener('click', () => {
+      // Send a POST request to the server for log-in
+    fetch('/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ /* add any relevant log-in data here */ })
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Handle the response from the server, e.g., display a message, redirect, etc.
+      console.log(data);
+    })
+    .catch(error => {
+      console.error('Error during log-in:', error);
+    });
+  });
+});
   
